@@ -1,0 +1,16 @@
+.product-skeleton-block {
+  background: var(--muted);
+  animation: product-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes product-skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-skeleton-block {
+    animation: none;
+  }
+}

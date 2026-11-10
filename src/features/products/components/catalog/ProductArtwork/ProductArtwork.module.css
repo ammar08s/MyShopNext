@@ -1,0 +1,47 @@
+.artwork {
+  position: relative;
+  overflow: hidden;
+  background: #f3f0e9;
+  isolation: isolate;
+}
+.image {
+  position: absolute;
+  inset: 0;
+  transition: transform 400ms ease;
+}
+
+.atlas {
+  position: absolute;
+  width: 400%;
+  height: 300%;
+  max-width: none;
+}
+.artwork:hover .image {
+  transform: scale(1.04);
+}
+.caption {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  color: #656b60;
+  background: #ffffffb8;
+  font-size: 0.5rem;
+  letter-spacing: 0.025em;
+}
+.fallback {
+  position: absolute;
+  inset: 25%;
+  width: 50%;
+  height: 50%;
+  color: #7d8c76;
+}
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    transition: none;
+  }
+  .artwork:hover .image {
+    transform: none;
+  }
+}

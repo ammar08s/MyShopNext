@@ -1,6 +1,6 @@
-# ShopBoard Next.js foundation design
+# ShopBoard Next.js design
 
-Status: Approved for foundation initialization on 2026-11-09. Full store feature migration remains outside this delivery.
+Status: Foundation initialization approved on 2026-11-09. Catalog/details and the subsequent retail-card, simplified-filter and demo-login revision are authorized. Real product routes, invisible internal IDs and dedicated test folders are preserved. Other store features remain future work.
 
 Date: 2026-11-09
 
@@ -15,7 +15,8 @@ This document records product scope, data contracts, and architectural decisions
 ## Current state
 
 - This repository uses Next.js App Router, React, strict TypeScript, Tailwind CSS v4 with PostCSS, and Next.js ESLint configuration. The existing project was reused rather than overwritten by a generator.
-- Application routes live in `src/app/`. The home route is a ShopBoard holding page using a shared shadcn/ui Badge. Store features have not been migrated here.
+- Application routes live in `src/app/`. The home catalog uses a `(catalog)` route group to keep its introduction outside loading/error boundaries. Product details use `/products/[productId]` with individual server reads. Shared navigation remains mounted across these routes.
+- The storefront polish revision adds illustrative product renders, removes availability filtering, styles category/sort selectors and implements `/login` with a tab-local demo session. The persistent provider wraps server-rendered application content without converting route pages into Client Components.
 - `AGENTS.md` contains the requested engineering and mentoring guidelines and the Next.js conventions. `CLAUDE.md` does not exist and is not required.
 - Prettier, Husky, lint-staged, LF text conventions, and the complete Vercel project skills are configured. Unused Next.js starter SVGs and the default favicon have been removed. No `public/` directory is needed until the store has static assets.
 - The original project documents a catalog, filters, product details, cart, checkout, demo administration, category management, local comments, and notifications. These are reference requirements, not evidence that those features exist in this repository.
@@ -60,7 +61,115 @@ These agent-proposed setup decisions are included in the approved initialization
 - Prefer the documented stable Next.js/Tailwind integration. Retain custom or experimental starter configuration only where it has a concrete, verified need; advanced caching and prefetch settings are not requirements of the foundation.
 - Preserve the project's typed component props, function documentation, direct imports, and feature boundaries. Adapt the shadcn primitives actually added to these conventions rather than broadly exempting UI code.
 
+## Catalog and product details milestone
+
+Status: Implementation authorized on 2026-11-10. The user selected catalog and product details, instant local filters, real route changes for details, no visible product IDs, and dedicated test folders. The user instructed the agent to proceed without further questions and explain the completed work.
+
+### Intent and scope
+
+Replace the holding page with a useful storefront where visitors can find products and open their individual details. This is the first feature migration after the foundation, retaining the existing Next.js stack and the original store's warm neutral and green visual direction.
+
+Included routes are `/` and `/products/[productId]`, plus appropriate missing-page feedback. This milestone includes read-only product access, response validation, instant filtering and sorting, responsive presentation, accessible controls, and loading/error/empty/not-found states.
+
+Cart, checkout, comments, administration, demo catalog overlays, real authentication, and publication remain later milestones. The later polish revision below adds only browser demo login/session behavior. Navigation and product pages expose working actions only. Decorative generated product renders must be labelled illustrative; do not fabricate API photos, descriptions, ratings, discounts or shipping promises.
+
+### Approaches and selected behavior
+
+| Approach                                         | Benefits                                                                                                                                              | Tradeoffs                                                                    | Decision              |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------- |
+| Server-loaded catalog with instant local filters | A validated server snapshot renders immediately; browser filtering needs no further API requests. Keeps state ownership and the learning scope small. | Selections belong to the mounted catalog and are not shareable or persisted. | Selected by the user. |
+| Server-loaded catalog with URL-backed filters    | Filtered views can be shared and bookmarked, with URL-driven navigation history.                                                                      | Adds URL parsing, validation, and navigation coordination.                   | Not selected.         |
+
+Both approaches retain server-owned API reads and native Next.js detail routes. A browser request cache or client-only migration is unnecessary for either approach.
+
+### Catalog experience
+
+- Keep a compact shared header with a ShopBoard link and a working catalog navigation link. Follow it with a brief editorial introduction and the catalog workspace.
+- Show a responsive search/category bar above a product grid, with result count and sorting above the cards. Use one column on the narrowest screens, two where readable, three on medium screens and four on wide screens. The polish revision replaces the original narrow sidebar.
+- Search matches product titles by a trimmed, case-insensitive substring. The empty query matches every title.
+- Category choices come from the complete validated snapshot and remain available when search hides their products. Include an All categories choice. There is no availability filter; in-stock and out-of-stock products participate equally in matching.
+- Sorting offers Name A–Z, Name Z–A, Price low to high, and Price high to low. Default to Name A–Z. Use a deterministic secondary comparison for equal names or prices; never mutate the server snapshot when sorting.
+- Search and category combine with AND semantics and update immediately without a submit action or further API request. Reset restores an empty query, all categories and Name A–Z.
+- Announce the current result count politely without moving keyboard focus. A genuinely empty collection has its own message; a nonempty collection with no matches offers a reset action.
+- Each retail card is one keyboard-operable link to its real detail route. Show true title, category, USD price and stock status, plus a labelled illustrative product render and clear details affordance. Wrap long content and keep hover/focus visible.
+- Filter selections have one local React state owner. Derive categories, visible products, and counts during rendering. Do not copy products into state, synchronize derived results with effects, or write filters to the URL or browser storage. State is discarded when the catalog unmounts or the page reloads; no persistent filter restoration is promised.
+
+### Product details experience
+
+- A product card opens `/products/{id}` with Next.js Link. A direct visit or refresh reads that individual product rather than downloading the collection.
+- Show a Back to catalog link, decorative category treatment, title, category, USD price, and stock availability. Product IDs remain internal to routing and validation and never appear in visible card/detail content. Opening details changes the real browser route; it does not replace the catalog within the same page or use a hash-only mockup. Keep out-of-stock products readable. Product details remain server-rendered because this milestone has no product mutation or browser-only detail interaction.
+- Accept only canonical positive safe-integer IDs. Zero, negatives, leading zeros, decimals, nonnumeric values, and numbers outside the safe-integer range show not-found feedback without contacting the API.
+- HTTP 404 for a valid ID is an expected missing-product result. A successful response with the wrong ID, malformed JSON, or invalid fields is a retryable request failure rather than a missing product.
+- Include a useful page title based on the validated product where practical without duplicating the individual product request within one render. Unknown application URLs also show a clear route back to the catalog.
+
+### API contract and request policy
+
+The read-only collection was checked on 2026-11-09. `GET https://shopboard-api.vercel.app/api/products` returned an object with `items` and `total`, containing 12 products at inspection time. The count is an observation, not a hardcoded requirement. A subsequent read-only check confirmed that `/api/products/1` returns the individual record directly, and an unknown positive ID returns HTTP 404.
+
+- Keep server-only URL configuration, GET execution, status handling, and JSON decoding in `src/shared/api/apiClient.ts`. Use `SHOPBOARD_API_BASE_URL` when provided, otherwise the documented API base URL, and add the environment example and README setup instructions with implementation.
+- Put `getProducts`, `getProduct`, validated domain types, and response mapping in the products feature's catalog module. Map `category_name`, `price_cents`, and `in_stock` to frontend names such as `category`, `priceCents`, and `inStock`.
+- Treat decoded JSON as `unknown`. Require positive safe-integer IDs, nonempty titles/categories, nonnegative safe-integer price cents, and boolean stock values. Validate the collection envelope and nonnegative integer total, reject duplicate IDs, and fail the request when any item is invalid rather than silently omitting it. Ignore unrelated extra fields.
+- This milestone displays the complete, unpaginated collection. If the endpoint indicates more products than it returns, report an unsupported/incomplete response instead of displaying misleading complete-catalog filters; pagination would require a separate scope decision.
+- `getProduct` verifies that the returned product ID matches its input and represents HTTP 404 as a typed expected result. Other HTTP, network, timeout, JSON, and validation failures reach the request error UI. Keep unsafe remote response details out of user-facing messages.
+- Start API reads with explicit `cache: "no-store"`. Use a 10-second request timeout so failures cannot leave loading feedback indefinitely. Preserve framework-owned fetch exceptions so Next.js can select request-time rendering rather than wrapping its control-flow signals. Do not add automatic retry loops, artificial loading delays, proxy routes, or write methods. Deduplication for product metadata and rendering uses request-scoped React caching while retaining uncached reads across requests.
+- Server Components call the feature reads directly. Pass only the validated serializable catalog fields into its interactive client section. Product details do not import the collection loader. Do not re-fetch the catalog in the browser or introduce TanStack Query/SWR for this snapshot.
+
+### Components and state ownership
+
+Keep `RootLayout`, route entry points, the shared navigation shell, and product details as Server Components by default. Only the catalog interaction owner, interactive controls within its client subtree, and framework-required error recovery need a client boundary.
+
+The products feature owns its catalog UI, filtering UI, detail UI, and request feedback. Organize its non-UI work into catalog, filtering, and pricing responsibilities. Shared currency formatting belongs in the narrowest appropriate pricing module until another feature actually needs it. Follow the repository's component folders, typed Props, direct imports, and required function documentation.
+
+Use props and children to compose focused components, without a global filter provider, large boolean-mode components, speculative wrappers, or unused cart/demo providers. Apply the repository's Vercel React and composition skills, and code-simplifier when implementing and reviewing touched code. Add source-owned shadcn controls only where they provide a concrete benefit; preserve attribution and project conventions.
+
+### Loading, recovery, and accessibility
+
+- Keep the shared header available while either route loads, fails, or shows a missing product. Keep the collection introduction outside the replaceable catalog request area using a narrow route layout or boundary where useful.
+- Show a decorative skeleton matching the filter area, toolbar, and six cards while the collection is pending, and a detail-shaped skeleton for an individual read. Announce loading once, keep placeholders non-interactive, disable shimmer for reduced-motion preferences, and replace placeholders immediately after success or failure.
+- Use native Next.js loading, error, not-found, and focused Suspense boundaries as appropriate. A retry action must initiate a new server read and recover after the upstream service returns; resetting a rejected render alone is insufficient. Keep error recovery focused on the affected route content.
+- Distinguish collection loading, retryable errors, empty collection, no matches, missing product, and success. A failure must never look like an empty catalog. Provide a reload fallback when necessary for unrecoverable client/deployment failures.
+- Use semantic landmarks, one clear page heading, explicit control labels, a useful keyboard order, visible focus, and text for stock state. Do not depend on color or animation alone. Keep content usable at 320px and on wide screens, including long titles/categories and keyboard-only browsing.
+
+### Acceptance and verification
+
+1. `/` server-renders the validated catalog; search, category, sorting, result count, reset and no-match behavior work without browser API fetches. Availability filtering is absent.
+2. Cards navigate to details, and direct detail URLs and refresh work without requesting the collection. Invalid IDs, HTTP 404, invalid product responses, and unknown routes produce the intended distinct states.
+3. Failed reads time out or show actionable errors; retry performs a new read and succeeds when the service recovers. Shared navigation remains available throughout.
+4. Add focused tests for response validation/mapping, ID parsing, filter combinations/reset/defaults, sorting without input mutation, USD formatting, and meaningful request/error behavior. Use Node's built-in test runner with the existing Node >=22.22.1 floor, explicit `.ts` imports and the `react-server` export condition for server-only module tests. Keep tests in a dedicated `tests/` folder within each owning module or component, including `src/shared/api/tests/`; do not scatter them among production files. No separate testing framework is needed.
+5. Manually check the affected flow on narrow/wide layouts, keyboard behavior, reduced motion, and loading/error/empty/not-found states when browser access is available. Verify the README's component tree in React DevTools when available and explicitly report access limits.
+6. Run `npm run format`, `npm run lint`, `npm run typecheck`, `npm run format:check`, and `npm run build`, plus the focused tests. Only report executed checks as passing.
+7. Update README setup, implemented behavior, the complete component tree and its props/boundaries/state owners, and the learning walkthrough. Explain how to change a filter or card and provide one small coding exercise.
+
+### Decisions left to the implementer
+
+Exact component names, route-boundary placement, copy, spacing, category initial styling, focused test scripts, and the smallest set of shadcn controls are agent implementation decisions within this scope. Preserve the current compatible dependencies unless a specific implementation need justifies an addition. Browser mockups are disposable review artifacts outside this repository and do not replace this design or its approval.
+
 ## Application structure
+
+### Separate user/admin demos, product CRUD and custom options
+
+The user's latest clarification authorizes a demo user login, a separate administrator login and working administrator product CRUD, plus improved open dropdown options. Their instruction to proceed without further questions remains in force. This revision supersedes the previous single-account/native-select limitation.
+
+- `/login` is the customer demo (`user@shopboard.demo` / `User123!`). `/admin/login` is the admin demo (`admin@shopboard.demo` / `Admin123!`). Each form validates its intended role. A v2 tab session stores only `{ version: 2, role: "user" | "admin" }` under `shopboard.session.v2`; legacy role-less markers never imply administrator access. Header navigation and sign-out reflect one current role.
+- `/admin` is a clearly labelled browser-only product-management workspace. Its client admin guard remains above dashboard request loading/error boundaries and redirects guest/customer sessions to `/admin/login`. This is a demo UI gate, never real authorization or permission to modify the shared API.
+- Admins can create products, read shared/local records, edit title/category/USD price/stock and delete with confirmation. Editing cancellation preserves data. Reset demo catalog is a separate confirmed action. Validate trimmed title (1–120), category (1–60), nonnegative exact USD prices with at most two decimal places and boolean stock. Keep form draft/validation/action feedback local and preserve the editor when the shared list fails.
+- One persistent products provider owns a validated localStorage overlay at `shopboard.catalog.v1`: version, decreasing next local ID, created products, positive-ID overrides and hidden positive IDs. Hydrate after subscription with matching initial server/client snapshots; do not overwrite saved changes before loading. Corrupt/blocked/full storage leaves the visit usable and explains persistence limits. API snapshots remain route props, never copied into another state owner.
+- Storefront products/categories/counts derive from the current API snapshot plus local changes. Admin saved changes remain editable outside the API recovery boundary; the shared table omits locally overridden/deleted records to avoid duplicate rows. Reset restores the shared catalog without sending any write request.
+- New products use negative IDs and real `/products/-N` routes that resolve only from this browser's overlay, without contacting an individual API endpoint. Positive routes keep their individual read and apply local overrides/deletion after hydration. Internal IDs stay out of visible product content. Browser-aware detail rendering is a focused client boundary; API fields still validate at the server boundary. The original negative-ID/no-detail rule is replaced by this behavior.
+- Replace native `<option>` popups with a source-owned Radix Select wrapper: fully styled option panel, selected checkmark, hover/keyboard highlight, scrolling, collision handling and focus restoration. Use safe internal option encoding so arbitrary category values, including the all-category empty value, cannot collide. Add only the granular `@radix-ui/react-select` dependency for this concrete accessibility need. Availability filtering remains removed.
+- Keep feature boundaries: auth owns roles, products owns demo catalog/management, and the application layer composes the admin guard/routes/providers. Never add a backend, database, API proxy or shared-service write operation. Tests stay in dedicated responsibility-owned `tests/` folders; document and verify all changed routes and state owners.
+
+### Storefront polish and demo login revision
+
+Authorized by the user's follow-up request on 2026-11-10, with their instruction to proceed without further questions. This revision supersedes the earlier availability-filter and letter-artwork decisions.
+
+- Redesign cards using retail references such as [Everlane's collection](https://www.everlane.com/collections/womens-bags): consistent product media, readable name/category/price, a clear details affordance, generous spacing, borders and restrained hover/focus feedback. Use a wider product grid with a horizontal filter bar instead of the narrow sidebar.
+- The API still supplies no photos. Use locally generated, consistently lit illustrative product renders, visibly labelled as illustrations rather than actual inventory photography. Known titles map to a 4-by-3 atlas; unknown products use a category illustration fallback. Keep true API names/prices/stock, real product routes and invisible internal IDs. Do not invent ratings, discounts, cart actions, product descriptions or shipping claims.
+- Remove availability filtering entirely from controls, filter state/types, logic and reset. Keep title search, category selection and four sort orders. Availability remains product information on cards/details.
+- Improve category and sorting controls with a shared labelled, styled native select: clear border, chevron, padding, hover/focus feedback and native keyboard/mobile behavior. No dependency is required for two simple selectors.
+- Add `/login` as a clearly labelled demo account page. Use the original demo credentials `admin@shopboard.demo` / `Admin123!`, with field validation, a fill-demo action, password visibility and success/sign-out states. Successful sign-in offers a return to the collection; this revision does not add an admin dashboard.
+- One persistent client provider owns a per-provider demo-session store. Subscribe/hydrate versioned `shopboard.admin.session.v1` sessionStorage after mounting, keeping the server snapshot and first client render in a neutral loading state. Never read storage at module scope or during render. Persist only a versioned signed-in marker, never passwords or entered fields. Corrupt/blocked storage produces a usable guest/current-visit state and an explanation. Header account actions use this same owner.
+- Add focused credentials, session-storage and image-mapping tests in their owning `tests/` folders. Update the existing filtering tests and README component tree. Retain all required project checks and report any browser verification limits.
 
 `src/app/` owns Next.js route entry points, layouts, providers, metadata, and coordination between features. It is not a new home for all feature logic. There is no Vite `main.tsx`, custom React mounting entry point, or React Router root `App`.
 
@@ -89,7 +198,7 @@ This section defines the future catalog boundary; initialization does not create
 - Default base URL: `https://shopboard-api.vercel.app`.
 - Collection endpoint: `GET /api/products`.
 - Individual product endpoint: `GET /api/products/{id}`.
-- The original project's documented fields are `id`, `title`, `category_name`, `price_cents`, and `in_stock`. Confirm collection envelope and response details with read-only requests when implementing the catalog. Do not invent product images or descriptions; the original API contract provides neither.
+- The documented fields are `id`, `title`, `category_name`, `price_cents`, and `in_stock`. Confirm collection envelope and response details through read-only requests when changing the contract. Do not claim that illustrative renders are actual API photography or invent descriptions; the API provides neither images nor descriptions.
 - Use integer cents for price arithmetic and USD as the existing documented display assumption.
 - Read a deployment override from a server-only environment variable such as `SHOPBOARD_API_BASE_URL`. Add its documented environment example when the API client is actually introduced. No secret belongs in a `NEXT_PUBLIC_*` variable.
 - Centralize URL configuration, GET execution, status handling, and JSON parsing in `src/shared/api/apiClient.ts`. Do not expose an arbitrary HTTP method or write operation for this API.
@@ -185,6 +294,6 @@ Choose the smallest shadcn primitive needed by the holding page, exact component
 
 ## Approval boundary
 
-The user approved this design and authorized foundation initialization, unused-starter cleanup, and a learning recap. That approval does not authorize full feature migration, backend changes, or publication. Use brainstorming and obtain design approval for later significant features; explicitly requested documentation edits do not authorize application implementation on their own.
+The user previously approved foundation initialization, unused-starter cleanup, and a learning recap. On 2026-11-10 the user authorized catalog and product details implementation with the corrections recorded above and instructed the agent to proceed without further questions. This authorizes that milestone only. Other feature migration, backend changes, and publication require their own authorization; explicitly requested documentation edits alone do not authorize application implementation.
 
 Implementation notes, review logs, scratch files, and temporary verification assets remain outside the repository, as required by the project rules. This durable `design.md` is the design artifact for this project.

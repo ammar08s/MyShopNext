@@ -76,7 +76,7 @@ After each completed feature:
 - **Each feature separates UI into `components/` and non-UI code into `modules/`. Each component owns a folder containing its component, with styles and UI tests when needed. Modules group state/hooks, business logic, API access, validation, types, and tests by responsibility. Components may import modules; modules must never import components. Split by responsibility, without empty folders or trivial wrapper components.**
 - Use `components/<ComponentName>/<ComponentName>.tsx` for feature entry points and small component collections. When a feature's UI grows, group related component folders by responsibility using `components/<responsibility>/<ComponentName>/<ComponentName>.tsx`, such as `catalog/`, `filtering/`, `loading/`, and `feedback/`. Colocate any custom CSS Module in its owning component folder. Keep exactly one component per file; do not create empty stylesheets for utility-styled components.
 - Use descriptive responsibility folders such as `modules/catalog/`, `modules/filtering/`, and `modules/pricing/`; do not recreate a flat collection of unrelated logic files inside `modules/`.
-- Keep module tests beside the code they exercise. Name hooks with a `use` prefix, such as `useProducts.ts` or `useProductFilters.ts`.
+- Keep tests in a dedicated `tests/` folder inside the module or component they exercise, such as `modules/catalog/tests/products.data.test.ts`. Do not mix test files directly among production files or collect unrelated tests in one project-wide folder. Name hooks with a `use` prefix, such as `useProducts.ts` or `useProductFilters.ts`.
 - Keep feature-specific types with the module that owns their domain. UI-only types belong with their component.
 - Keep only genuinely shared feature UI rules in clearly named stylesheets under the narrowest owning `components/` group, such as `components/loading/productSkeleton.css`; component-specific selectors and responsive rules belong beside their component.
 - Do not create empty files, folders, barrel files, or abstractions to satisfy the structure. Create only the parts a feature actually needs.
@@ -123,14 +123,16 @@ src/
         catalog/
           products.api.ts
           products.data.ts
-          products.data.test.ts
           products.types.ts
           useProducts.ts
+          tests/
+            products.data.test.ts
         filtering/
           products.filters.ts
-          products.filters.test.ts
           products.filters.types.ts
           useProductFilters.ts
+          tests/
+            products.filters.test.ts
   shared/
     api/
       apiClient.ts

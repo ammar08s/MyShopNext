@@ -3,6 +3,8 @@
 @source "../../app";
 @source "../components";
 @source "../modules/ui";
+@source "../../features/products/components";
+@source "../../features/auth/components";
 
 @custom-variant dark (&:is(.dark *));
 
