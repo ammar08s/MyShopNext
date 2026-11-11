@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import type { Product } from "@/features/products/modules/catalog/products.types";
 import { formatProductPrice } from "@/features/products/modules/pricing/products.pricing";
 import { ProductArtwork } from "../ProductArtwork/ProductArtwork";
@@ -45,7 +46,7 @@ export function ProductCard({ product }: Props): ReactElement {
             aria-hidden="true"
             className="inline-flex size-7 items-center justify-center rounded-full bg-secondary text-base transition-colors group-hover:bg-primary group-hover:text-primary-foreground motion-reduce:transition-none"
           >
-            ↗
+            <Icon name="arrow-up-right" />
           </span>
         </div>
       </div>

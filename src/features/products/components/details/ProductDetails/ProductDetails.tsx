@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import type { Product } from "@/features/products/modules/catalog/products.types";
 import { formatProductPrice } from "@/features/products/modules/pricing/products.pricing";
 import { ProductArtwork } from "../../catalog/ProductArtwork/ProductArtwork";
@@ -22,9 +23,10 @@ export function ProductDetails({ product }: Props): ReactElement {
     >
       <Link
         href="/"
-        className="mb-8 inline-block rounded-sm text-sm text-muted-foreground hover:text-primary"
+        className="mb-8 inline-flex items-center gap-2 rounded-sm text-sm text-muted-foreground hover:text-primary"
       >
-        <span aria-hidden="true">← </span>Back to catalog
+        <Icon name="arrow-left" />
+        Back to catalog
       </Link>
       <div className="grid items-center gap-8 md:grid-cols-2 lg:gap-20">
         <ProductArtwork

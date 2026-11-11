@@ -5,7 +5,7 @@ import { ProductDetailsView } from "@/features/products/components/details/Produ
 import { getProduct } from "@/features/products/modules/catalog/products.api";
 import { parseProductRouteId } from "@/features/products/modules/demo/demoCatalog.validation";
 
-interface Props extends PageProps<"/products/[productId]"> {
+interface Props extends PageProps<"/products/[id]"> {
   children?: never;
 }
 
@@ -15,8 +15,8 @@ interface Props extends PageProps<"/products/[productId]"> {
  * @returns Product metadata or a missing-product title.
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { productId } = await params;
-  const id = parseProductRouteId(productId);
+  const { id: routeId } = await params;
+  const id = parseProductRouteId(routeId);
   if (id === null) return { title: "Product not found" };
   if (id < 0) return { title: "Demo product" };
   const product = await getProduct(id);
@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({
   params,
 }: Props): Promise<ReactElement> {
-  const { productId } = await params;
-  const id = parseProductRouteId(productId);
+  const { id: routeId } = await params;
+  const id = parseProductRouteId(routeId);
   if (id === null) notFound();
   if (id < 0) return <ProductDetailsView productId={id} apiProduct={null} />;
   const product = await getProduct(id);

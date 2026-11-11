@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactElement, ReactNode } from "react";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import { ProductArtwork } from "@/features/products/components/catalog/ProductArtwork/ProductArtwork";
 
 interface Props {
@@ -38,9 +39,9 @@ export function LoginPageLayout({ children }: Props): ReactElement {
           </p>
           <Link
             href="/"
-            className="rounded-sm font-medium underline underline-offset-4"
+            className="inline-flex items-center gap-2 rounded-sm font-medium underline underline-offset-4"
           >
-            Browse <span aria-hidden="true">↗</span>
+            Browse <Icon name="arrow-up-right" />
           </Link>
         </div>
       </aside>

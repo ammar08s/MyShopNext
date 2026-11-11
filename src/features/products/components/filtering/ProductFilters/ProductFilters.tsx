@@ -1,22 +1,28 @@
 import type { ChangeEvent, ReactElement } from "react";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import { SelectField } from "@/shared/components/ui/SelectField/SelectField";
 import type { SelectOption } from "@/shared/modules/ui/selectField.types";
 import type { ProductFilters as FilterValues } from "@/features/products/modules/filtering/products.filters.types";
 
 interface Props {
-  categories: readonly string[];
   values: FilterValues;
   onChange: (changes: Partial<FilterValues>) => void;
   onReset: () => void;
 }
 
+const sortOptions: readonly SelectOption[] = [
+  { value: "name-asc", label: "Name A–Z" },
+  { value: "name-desc", label: "Name Z–A" },
+  { value: "price-asc", label: "Price low to high" },
+  { value: "price-desc", label: "Price high to low" },
+];
+
 /**
- * Presents a compact search/category bar without availability filtering.
- * @param props - Full categories, selected filters and their owner callbacks.
- * @returns Accessible search, polished category selection and reset controls.
+ * Presents controls whose choices do not depend on a product response.
+ * @param props - Current selections and their layout-owned actions.
+ * @returns Enabled search/sort controls and reset, including during API loading.
  */
 export function ProductFilters({
-  categories,
   values,
   onChange,
   onReset,
@@ -25,18 +31,16 @@ export function ProductFilters({
   function changeQuery(event: ChangeEvent<HTMLInputElement>): void {
     onChange({ query: event.target.value });
   }
-  /** @param value - Category choice. @returns No value; empty selects all. */
-  function changeCategory(value: string): void {
-    onChange({ category: value || null });
+  /** @param value - Fixed sort choice. @returns No value; ignores unknown orders. */
+  function changeSort(value: string): void {
+    if (
+      value === "name-asc" ||
+      value === "name-desc" ||
+      value === "price-asc" ||
+      value === "price-desc"
+    )
+      onChange({ sort: value });
   }
-  /** @param category - Full-snapshot category. @returns A labelled option. */
-  function createCategoryOption(category: string): SelectOption {
-    return { value: category, label: category };
-  }
-  const categoryOptions: readonly SelectOption[] = [
-    { value: "", label: "All categories" },
-    ...categories.map(createCategoryOption),
-  ];
   const isDefault =
     !values.query && values.category === null && values.sort === "name-asc";
   return (
@@ -53,26 +57,10 @@ export function ProductFilters({
             Find something you love
           </label>
           <div className="relative">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 20 20"
-              fill="none"
+            <Icon
+              name="search"
               className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
-            >
-              <circle
-                cx="8.5"
-                cy="8.5"
-                r="5.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path
-                d="m13 13 4 4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            />
             <input
               id="product-search"
               type="search"
@@ -84,11 +72,11 @@ export function ProductFilters({
           </div>
         </div>
         <SelectField
-          id="product-category"
-          label="Category"
-          value={values.category ?? ""}
-          options={categoryOptions}
-          onValueChange={changeCategory}
+          id="product-sort"
+          label="Sort by"
+          value={values.sort}
+          options={sortOptions}
+          onValueChange={changeSort}
         />
         <button
           type="button"

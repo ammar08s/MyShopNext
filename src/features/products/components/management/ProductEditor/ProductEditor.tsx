@@ -1,5 +1,6 @@
 import type { ChangeEvent, FormEvent, ReactElement, RefObject } from "react";
 import { SelectField } from "@/shared/components/ui/SelectField/SelectField";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import type { SelectOption } from "@/shared/modules/ui/selectField.types";
 import type {
   ProductDraft,
@@ -174,8 +175,9 @@ export function ProductEditor({
           <button
             type="submit"
             disabled={disabled}
-            className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
+            <Icon name={draft.id === null ? "plus" : "save"} />
             {draft.id === null ? "Create product" : "Save changes"}
           </button>
           <button

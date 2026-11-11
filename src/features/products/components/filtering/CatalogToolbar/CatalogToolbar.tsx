@@ -1,40 +1,38 @@
 import type { ReactElement } from "react";
 import { SelectField } from "@/shared/components/ui/SelectField/SelectField";
 import type { SelectOption } from "@/shared/modules/ui/selectField.types";
-import type {
-  ProductFilters,
-  ProductSort,
-} from "@/features/products/modules/filtering/products.filters.types";
+import type { ProductFilters } from "@/features/products/modules/filtering/products.filters.types";
 
 interface Props {
   count: number;
-  sort: ProductSort;
+  categories: readonly string[];
+  category: string | null;
   onChange: (changes: Partial<ProductFilters>) => void;
 }
 
-const sortOptions: readonly SelectOption[] = [
-  { value: "name-asc", label: "Name A–Z" },
-  { value: "name-desc", label: "Name Z–A" },
-  { value: "price-asc", label: "Price low to high" },
-  { value: "price-desc", label: "Price high to low" },
-];
-
 /**
- * Pairs a clear collection heading/count with a polished sort selector.
- * @param props - Derived count, current sort and filter-owner callback.
- * @returns A responsive results heading and accessible custom sort control.
+ * Presents the count and category options that depend on the loaded collection.
+ * @param props - Derived count/categories, selected category and layout-owned action.
+ * @returns Results feedback and category selection after product data is available.
  */
-export function CatalogToolbar({ count, sort, onChange }: Props): ReactElement {
-  /** @param value - Sort choice. @returns No value; ignores unknown orders. */
-  function changeSort(value: string): void {
-    if (
-      value === "name-asc" ||
-      value === "name-desc" ||
-      value === "price-asc" ||
-      value === "price-desc"
-    )
-      onChange({ sort: value });
+export function CatalogToolbar({
+  count,
+  categories,
+  category,
+  onChange,
+}: Props): ReactElement {
+  /** @param value - Category choice. @returns No value; an empty value selects all. */
+  function changeCategory(value: string): void {
+    onChange({ category: value || null });
   }
+  /** @param value - Full-collection category. @returns A labelled option. */
+  function createCategoryOption(value: string): SelectOption {
+    return { value, label: value };
+  }
+  const categoryOptions: readonly SelectOption[] = [
+    { value: "", label: "All categories" },
+    ...categories.map(createCategoryOption),
+  ];
   return (
     <div className="my-7 flex flex-wrap items-end justify-between gap-5">
       <div>
@@ -47,11 +45,11 @@ export function CatalogToolbar({ count, sort, onChange }: Props): ReactElement {
       </div>
       <div className="w-44 max-w-full">
         <SelectField
-          id="product-sort"
-          label="Sort by"
-          value={sort}
-          options={sortOptions}
-          onValueChange={changeSort}
+          id="product-category"
+          label="Category"
+          value={category ?? ""}
+          options={categoryOptions}
+          onValueChange={changeCategory}
         />
       </div>
     </div>

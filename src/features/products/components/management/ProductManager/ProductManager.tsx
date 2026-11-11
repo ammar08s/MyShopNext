@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState, type ReactElement, type ReactNode } from "react";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import type { Product } from "@/features/products/modules/catalog/products.types";
 import {
   createProductDraft,
@@ -14,6 +15,7 @@ import { useDemoCatalog } from "@/features/products/modules/demo/useDemoCatalog"
 import { ProductManagementContext } from "@/features/products/modules/management/productManagement.context";
 import { CatalogConfirmation } from "../CatalogConfirmation/CatalogConfirmation";
 import { ProductEditor } from "../ProductEditor/ProductEditor";
+import { ProductChangeSummary } from "../ProductChangeSummary/ProductChangeSummary";
 import { ProductTable } from "../ProductTable/ProductTable";
 
 interface Props {
@@ -161,6 +163,7 @@ export function ProductManager({ children }: Props): ReactElement {
   }
   return (
     <ProductManagementContext value={{ editProduct, deleteProduct }}>
+      <ProductChangeSummary changes={snapshot.changes} isLoading={isLoading} />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-secondary/50 px-5 py-4">
         <p className="max-w-2xl text-xs leading-6 text-secondary-foreground">
           Admin demo: products are changed only in this browser. No changes are
@@ -171,8 +174,9 @@ export function ProductManager({ children }: Props): ReactElement {
           type="button"
           onClick={requestReset}
           disabled={isLoading || !hasChanges}
-          className="rounded-lg border bg-card px-3 py-2 text-xs font-medium hover:border-destructive hover:text-destructive disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-xs font-medium hover:border-destructive hover:text-destructive disabled:opacity-40"
         >
+          <Icon name="reset" />
           Reset demo changes
         </button>
       </div>

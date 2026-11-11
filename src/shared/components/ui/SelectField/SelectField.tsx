@@ -2,6 +2,7 @@
 
 import * as Select from "@radix-ui/react-select";
 import type { ReactElement } from "react";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import { cn } from "@/shared/modules/ui/cn";
 import {
   decodeSelectOption,
@@ -74,15 +75,7 @@ export function SelectField({
       >
         <Select.ItemText>{option.label}</Select.ItemText>
         <Select.ItemIndicator className={styles.indicator}>
-          <svg aria-hidden="true" viewBox="0 0 16 16" fill="none">
-            <path
-              d="m3.5 8 3 3 6-6"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Icon name="check" />
         </Select.ItemIndicator>
       </Select.Item>
     );
@@ -107,15 +100,7 @@ export function SelectField({
         >
           <Select.Value placeholder={placeholder}>{selectedLabel}</Select.Value>
           <Select.Icon className={styles.chevron}>
-            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none">
-              <path
-                d="m4 6 4 4 4-4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Icon name="chevron-down" />
           </Select.Icon>
         </Select.Trigger>
         <Select.Portal>
@@ -127,29 +112,13 @@ export function SelectField({
             className={styles.content}
           >
             <Select.ScrollUpButton className={styles.scrollButton}>
-              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="m4 10 4-4 4 4"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Icon name="chevron-up" />
             </Select.ScrollUpButton>
             <Select.Viewport className={styles.viewport}>
               {options.map(renderOption)}
             </Select.Viewport>
             <Select.ScrollDownButton className={styles.scrollButton}>
-              <svg aria-hidden="true" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="m4 6 4 4 4-4"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Icon name="chevron-down" />
             </Select.ScrollDownButton>
           </Select.Content>
         </Select.Portal>

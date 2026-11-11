@@ -1,8 +1,8 @@
 # ShopBoard Next.js design
 
-Status: Foundation initialization approved on 2026-11-09. Catalog/details and the subsequent retail-card, simplified-filter and demo-login revision are authorized. Real product routes, invisible internal IDs and dedicated test folders are preserved. Other store features remain future work.
+Status: The implemented scope includes catalog/details, retail cards, instant filters, separate user/admin demo logins, browser-local product CRUD and custom selection menus. The dashboard completion and SVG icon revision are authorized. Real product routes, invisible internal IDs and dedicated test folders are preserved. Cart, checkout, comments, standalone category management and real authentication remain future work.
 
-Date: 2026-11-09
+Updated: 2026-11-11. Earlier milestone sections retain their original scope; the current state and subsequent revisions take precedence.
 
 ## Intent
 
@@ -15,10 +15,10 @@ This document records product scope, data contracts, and architectural decisions
 ## Current state
 
 - This repository uses Next.js App Router, React, strict TypeScript, Tailwind CSS v4 with PostCSS, and Next.js ESLint configuration. The existing project was reused rather than overwritten by a generator.
-- Application routes live in `src/app/`. The home catalog uses a `(catalog)` route group to keep its introduction outside loading/error boundaries. Product details use `/products/[productId]` with individual server reads. Shared navigation remains mounted across these routes.
-- The storefront polish revision adds illustrative product renders, removes availability filtering, styles category/sort selectors and implements `/login` with a tab-local demo session. The persistent provider wraps server-rendered application content without converting route pages into Client Components.
+- Application routes live in `src/app/`. The home catalog uses a `(catalog)` route group to keep its introduction outside loading/error boundaries. Positive product-detail IDs use individual server reads; negative IDs resolve browser-created records without an API call. Shared navigation remains mounted across these routes.
+- The storefront uses illustrative product renders, instant search/category/sort controls and custom dropdown options, with no availability filter. `/login` and `/admin/login` use separate tab-local demo roles. `/admin` provides persistent product editing, local/shared tables, change counts and confirmed delete/reset actions. Persistent providers wrap server-rendered application content without converting route pages into Client Components.
 - `AGENTS.md` contains the requested engineering and mentoring guidelines and the Next.js conventions. `CLAUDE.md` does not exist and is not required.
-- Prettier, Husky, lint-staged, LF text conventions, and the complete Vercel project skills are configured. Unused Next.js starter SVGs and the default favicon have been removed. No `public/` directory is needed until the store has static assets.
+- Prettier, Husky, lint-staged, LF text conventions, and the complete Vercel project skills are configured. Unused Next.js starter assets are removed. `public/products/catalog-atlas.png` contains the illustrative product imagery; interface icons use source-owned SVG paths.
 - The original project documents a catalog, filters, product details, cart, checkout, demo administration, category management, local comments, and notifications. These are reference requirements, not evidence that those features exist in this repository.
 
 Reference: [original ShopBoard repository](https://github.com/ammar08s/Shopboard_React), including its [README](https://github.com/ammar08s/Shopboard_React/blob/main/README.md) and [product requirements](https://github.com/ammar08s/Shopboard_React/blob/main/design.md).
@@ -63,6 +63,14 @@ These agent-proposed setup decisions are included in the approved initialization
 
 ## Catalog and product details milestone
 
+### Independent controls and product-route refinement
+
+Search, reset and fixed sort choices render in the catalog layout immediately, outside the page's loading/error boundary. A catalog-scoped client workspace owns only query/category/sort selections and shares actions with the route results through context. API products remain server-owned props; categories and filtered results remain derived data. This provider is justified by the persistent controls and separately streamed results, replacing the original component-local owner without making filters global.
+
+Only the data-dependent category choices, count and product grid use loading placeholders. Search and sort remain available during loading, empty results and request failures; retry preserves selections. Category selection sits beside the result count, while search and sort share the persistent control bar. `aria-label="Product filters"` is a frontend accessibility name, independent of fetching. Existing detail routes use the App Router folder `src/app/products/[id]/page.tsx`, awaiting `params.id`, validating it and retaining individual reads, metadata and route fallbacks. This renames the existing `[productId]` segment without changing URLs.
+
+The chosen layout boundary preserves controls through loading and retries with no duplicate fetching. Keeping all controls inside the data page was simpler but unnecessarily blocked search; a client fetch cache or parallel route slots would add complexity without a requirement.
+
 Status: Implementation authorized on 2026-11-10. The user selected catalog and product details, instant local filters, real route changes for details, no visible product IDs, and dedicated test folders. The user instructed the agent to proceed without further questions and explain the completed work.
 
 ### Intent and scope
@@ -85,20 +93,20 @@ Both approaches retain server-owned API reads and native Next.js detail routes. 
 ### Catalog experience
 
 - Keep a compact shared header with a ShopBoard link and a working catalog navigation link. Follow it with a brief editorial introduction and the catalog workspace.
-- Show a responsive search/category bar above a product grid, with result count and sorting above the cards. Use one column on the narrowest screens, two where readable, three on medium screens and four on wide screens. The polish revision replaces the original narrow sidebar.
+- Show a responsive search/sort/reset bar outside the product request boundary, with data-dependent result count and category selection above the cards. Use one column on the narrowest screens, two where readable, three on medium screens and four on wide screens. The polish revision replaces the original narrow sidebar.
 - Search matches product titles by a trimmed, case-insensitive substring. The empty query matches every title.
 - Category choices come from the complete validated snapshot and remain available when search hides their products. Include an All categories choice. There is no availability filter; in-stock and out-of-stock products participate equally in matching.
 - Sorting offers Name A–Z, Name Z–A, Price low to high, and Price high to low. Default to Name A–Z. Use a deterministic secondary comparison for equal names or prices; never mutate the server snapshot when sorting.
 - Search and category combine with AND semantics and update immediately without a submit action or further API request. Reset restores an empty query, all categories and Name A–Z.
 - Announce the current result count politely without moving keyboard focus. A genuinely empty collection has its own message; a nonempty collection with no matches offers a reset action.
 - Each retail card is one keyboard-operable link to its real detail route. Show true title, category, USD price and stock status, plus a labelled illustrative product render and clear details affordance. Wrap long content and keep hover/focus visible.
-- Filter selections have one local React state owner. Derive categories, visible products, and counts during rendering. Do not copy products into state, synchronize derived results with effects, or write filters to the URL or browser storage. State is discarded when the catalog unmounts or the page reloads; no persistent filter restoration is promised.
+- Filter selections have one React state owner in the catalog layout's client workspace. Derive categories, visible products, and counts during rendering. Do not copy products into state, synchronize derived results with effects, or write filters to the URL or browser storage. Selections survive product-request retries and reset when the catalog layout unmounts or the page reloads; no persistent filter restoration is promised.
 
 ### Product details experience
 
 - A product card opens `/products/{id}` with Next.js Link. A direct visit or refresh reads that individual product rather than downloading the collection.
 - Show a Back to catalog link, decorative category treatment, title, category, USD price, and stock availability. Product IDs remain internal to routing and validation and never appear in visible card/detail content. Opening details changes the real browser route; it does not replace the catalog within the same page or use a hash-only mockup. Keep out-of-stock products readable. Product details remain server-rendered because this milestone has no product mutation or browser-only detail interaction.
-- Accept only canonical positive safe-integer IDs. Zero, negatives, leading zeros, decimals, nonnumeric values, and numbers outside the safe-integer range show not-found feedback without contacting the API.
+- Accept canonical nonzero safe-integer route IDs. Positive IDs read the shared API; negative IDs resolve browser-created demo products. Zero, leading zeros, decimals, nonnumeric values and numbers outside the safe-integer range show not-found feedback without contacting the API.
 - HTTP 404 for a valid ID is an expected missing-product result. A successful response with the wrong ID, malformed JSON, or invalid fields is a retryable request failure rather than a missing product.
 - Include a useful page title based on the validated product where practical without duplicating the individual product request within one render. Unknown application URLs also show a clear route back to the catalog.
 
@@ -125,7 +133,7 @@ Use props and children to compose focused components, without a global filter pr
 ### Loading, recovery, and accessibility
 
 - Keep the shared header available while either route loads, fails, or shows a missing product. Keep the collection introduction outside the replaceable catalog request area using a narrow route layout or boundary where useful.
-- Show a decorative skeleton matching the filter area, toolbar, and six cards while the collection is pending, and a detail-shaped skeleton for an individual read. Announce loading once, keep placeholders non-interactive, disable shimmer for reduced-motion preferences, and replace placeholders immediately after success or failure.
+- Show decorative placeholders for category/count and six cards while the collection is pending; leave search and fixed sorting available above the boundary. Use a detail-shaped skeleton for an individual read. Announce loading once, keep placeholders non-interactive, disable shimmer for reduced-motion preferences, and replace placeholders immediately after success or failure.
 - Use native Next.js loading, error, not-found, and focused Suspense boundaries as appropriate. A retry action must initiate a new server read and recover after the upstream service returns; resetting a rejected render alone is insufficient. Keep error recovery focused on the affected route content.
 - Distinguish collection loading, retryable errors, empty collection, no matches, missing product, and success. A failure must never look like an empty catalog. Provide a reload fallback when necessary for unrecoverable client/deployment failures.
 - Use semantic landmarks, one clear page heading, explicit control labels, a useful keyboard order, visible focus, and text for stock state. Do not depend on color or animation alone. Keep content usable at 320px and on wide screens, including long titles/categories and keyboard-only browsing.
@@ -147,6 +155,8 @@ Exact component names, route-boundary placement, copy, spacing, category initial
 ## Application structure
 
 ### Separate user/admin demos, product CRUD and custom options
+
+Dashboard completion includes a responsive overview of created, edited and hidden products, derived from the existing local record. Replace decorative text symbols with consistent SVG icons in navigation, login, product links and selections; pair management-action icons with visible labels. Keep the editor and local records usable during shared-list loading and failures. No dashboard sales figures or other fabricated metrics are introduced.
 
 The user's latest clarification authorizes a demo user login, a separate administrator login and working administrator product CRUD, plus improved open dropdown options. Their instruction to proceed without further questions remains in force. This revision supersedes the previous single-account/native-select limitation.
 

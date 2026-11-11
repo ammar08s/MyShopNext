@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactElement, ReactNode } from "react";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import { AdminAccessGuard } from "@/app/components/AdminAccessGuard/AdminAccessGuard";
 import { ProductManager } from "@/features/products/components/management/ProductManager/ProductManager";
 
@@ -21,7 +22,8 @@ export default function AdminLayout({ children }: Props): ReactElement {
       >
         <header className="mb-7 flex flex-wrap items-end justify-between gap-5 border-b pb-7">
           <div>
-            <p className="mb-2 text-[10px] font-semibold tracking-widest text-primary uppercase">
+            <p className="mb-2 flex items-center gap-2 text-[10px] font-semibold tracking-widest text-primary uppercase">
+              <Icon name="shield" />
               ShopBoard / Admin demo
             </p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -33,9 +35,9 @@ export default function AdminLayout({ children }: Props): ReactElement {
           </div>
           <Link
             href="/"
-            className="rounded-lg border bg-card px-4 py-2.5 text-sm font-medium hover:border-primary hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-sm font-medium hover:border-primary hover:text-primary"
           >
-            View storefront <span aria-hidden="true">↗</span>
+            View storefront <Icon name="arrow-up-right" />
           </Link>
         </header>
         <ProductManager>{children}</ProductManager>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/shared/components/ui/Icon/Icon";
 import {
   useRef,
   useState,
@@ -100,7 +101,7 @@ export function DemoLogin({ role }: Props): ReactElement {
           aria-hidden="true"
           className="mb-6 inline-flex size-14 items-center justify-center rounded-full bg-secondary text-2xl text-primary"
         >
-          ✓
+          <Icon name="check" className="size-7" />
         </span>
         <p className="mb-3 text-xs font-semibold tracking-widest text-primary uppercase">
           {portalName} demo account
@@ -132,9 +133,7 @@ export function DemoLogin({ role }: Props): ReactElement {
           className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           {role === "admin" ? "Open the dashboard" : "Explore the collection"}{" "}
-          <span aria-hidden="true" className="ml-3">
-            ↗
-          </span>
+          <Icon name="arrow-up-right" className="ml-3" />
         </Link>
         <button
           type="button"
@@ -243,7 +242,7 @@ export function DemoLogin({ role }: Props): ReactElement {
           className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
         >
           {isLoading ? "Preparing your demo…" : "Sign in to demo"}
-          <span aria-hidden="true">→</span>
+          <Icon name="arrow-right" />
         </button>
       </form>
       <div className="mt-7 rounded-xl border border-dashed bg-background p-4">
